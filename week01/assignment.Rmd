@@ -1,0 +1,4 @@
+```{r, eval = TRUE, echo = TRUE, cache = TRUE}
+  library("epiwraps")
+  sessionInfo()
+```
