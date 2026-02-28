@@ -5,3 +5,7 @@
 **.rdb
 **.rdx
 **/*__packages
+
+# rust stuff
+
+**/target

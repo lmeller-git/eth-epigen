@@ -1,4 +1,8 @@
+```{r, eval = TRUE, cache = TRUE}
+devtools::load_all("thingdoer")
+```
+
 ```{r, eval = TRUE, echo = TRUE, cache = TRUE}
-  library("epiwraps")
-  sessionInfo()
+library(epiwraps)
+do_the_thing()
 ```
