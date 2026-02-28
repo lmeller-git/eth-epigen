@@ -1,0 +1,25 @@
+```{r, eval = TRUE, echo = TRUE}
+suppressPackageStartupMessages({
+  library(AnnotationHub) # to fetch genomes, annotations, etc.
+  devtools::load_all("thingdoer") # load thingdoer libary
+})
+```
+
+```{r, eval = TRUE, echo = TRUE}
+ah <- AnnotationHub()
+
+query_mouse_ensdb <- query(ah, c("Mus musculus", "EnsDb", "GRCm38", "v102"))
+query_mouse <- query(ah, c("Mus musculus", "GRCm38", "TwoBit", "dna_sm"))
+query_fly <- query(ah, c("Drosophila melanogaster", "BDGP6", "TwoBit", "dna_sm"))
+
+query_mouse_ensdb
+query_mouse
+query_fly
+```
+
+```{r, eval = TRUE, echo = TRUE}
+query_mouse_db <- query_mouse_ensdb[[1]]
+db_path <- dbconn(query_mouse_db)@dbname
+stats <- do_the_thing(db_path)
+hist(stats$spliced_lengths, breaks = 100, main = "Spliced lengths of transcripts", xlab = "length bp")
+```

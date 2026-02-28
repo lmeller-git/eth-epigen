@@ -1,2 +1,3 @@
 [keys.normal.space]
-m = "@i```{r, eval = TRUE, echo = TRUE, cache = TRUE}<\n>```<esc>"
+m = "@i```{r, eval = TRUE, echo = TRUE}<\n>```<esc>"
+n = "@i```{r, eval = TRUE, echo = FALSE}<\n>```<esc>"

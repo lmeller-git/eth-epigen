@@ -9,7 +9,7 @@ output: html_document
 suppressPackageStartupMessages({
   library(AnnotationHub) # to fetch genomes, annotations, etc.
   library(ensembldb)     # to manipulate ensembl gene annotations
-  library(GenomicRanges) # data structure for genomic ranges 
+  library(GenomicRanges) # data structure for genomic ranges
   library(epiwraps)      # visualization
 })
 ```
@@ -78,7 +78,7 @@ myRegions$overlappingGenes[as.integer(names(overlapGenesPerRegion))] <- overlapG
 myRegions
 ```
 
-Another common task is to, rather than find direct overlaps, find the nearest gene to my region of interest: 
+Another common task is to, rather than find direct overlaps, find the nearest gene to my region of interest:
 
 ```{r}
 d <- distanceToNearest(myRegions, fly_genes)

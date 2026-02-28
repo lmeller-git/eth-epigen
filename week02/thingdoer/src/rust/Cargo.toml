@@ -10,7 +10,10 @@ crate-type = [ 'staticlib' ]
 name = 'thingdoer'
 
 [dependencies]
+diesel = { version = "2.1.6", default-features = false, features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
+libsqlite3-sys = { version = "*", features = ["bundled"] }
 extendr-api = '0.8.1'
+# rusqlite = { version = "0.38.0", features = ["bundled"] }
 
 [profile.release]
 lto = true

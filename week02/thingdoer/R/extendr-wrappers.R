@@ -14,5 +14,9 @@ NULL
 #' @export
 hello_world <- function() .Call(wrap__hello_world)
 
+#' solves the exercise given the path to a valid sql database containing the annotated genomic data.
+#' @export
+do_the_thing <- function(path) .Call(wrap__do_the_thing, path)
+
 
 # nolint end
