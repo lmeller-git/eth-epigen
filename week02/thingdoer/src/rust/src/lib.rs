@@ -24,11 +24,11 @@ fn do_the_thing(path: &str) -> Result<List> {
         .get_result(&mut conn)
         .map_err(|_| extendr_api::Error::EvalError("could not read db".into()))?;
 
+    #[allow(deprecated)]
     let gene_symbol_count: i64 = gene::table
         .filter(gene::gene_biotype.eq("protein_coding"))
-        .select(gene::gene_name)
-        .distinct()
-        .count()
+        .filter(gene::gene_name.is_not_null())
+        .select(diesel::dsl::count_distinct(gene::gene_name))
         .get_result(&mut conn)
         .map_err(|_| extendr_api::Error::EvalError("could not read db".into()))?;
 

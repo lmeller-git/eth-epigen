@@ -1,25 +1,40 @@
 ```{r, eval = TRUE, echo = TRUE}
 suppressPackageStartupMessages({
   library(AnnotationHub) # to fetch genomes, annotations, etc.
+  library(ensembldb)
   devtools::load_all("thingdoer") # load thingdoer libary
 })
 ```
+
+## assignment 1: load specified annotation files
 
 ```{r, eval = TRUE, echo = TRUE}
 ah <- AnnotationHub()
 
 query_mouse_ensdb <- query(ah, c("Mus musculus", "EnsDb", "GRCm38", "v102"))
+query_mouse_ensdb <- ah[[rev(query_mouse_ensdb$ah_id)[1]]]
+
 query_mouse <- query(ah, c("Mus musculus", "GRCm38", "TwoBit", "dna_sm"))
+query_mouse <- ah[[rev(query_mouse$ah_id)[1]]]
+
 query_fly <- query(ah, c("Drosophila melanogaster", "BDGP6", "TwoBit", "dna_sm"))
+query_fly <- ah[[rev(query_fly$ah_id)[1]]]
 
 query_mouse_ensdb
 query_mouse
 query_fly
 ```
 
+## assignment 2: find gene ids, gene symbols and spliced transcript lengths
+
 ```{r, eval = TRUE, echo = TRUE}
-query_mouse_db <- query_mouse_ensdb[[1]]
-db_path <- dbconn(query_mouse_db)@dbname
+db_path <- dbconn(query_mouse_ensdb)@dbname
 stats <- do_the_thing(db_path)
-hist(stats$spliced_lengths, breaks = 100, main = "Spliced lengths of transcripts", xlab = "length bp")
+hist(stats$spliced_lengths, breaks = 100, main = "spliced lengths of transcripts distribution", xlab = "length bp")
+```
+
+Since the distribution is strongly skewed to short lengths, plotting it on a log-scale may yield better results
+
+```{r, eval = TRUE, echo = TRUE}
+hist(log10(stats$spliced_lengths), breaks = 100, main = "spliced lengths of transcripts distribution", xlab = "log10 length bp")
 ```
