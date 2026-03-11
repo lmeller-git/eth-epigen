@@ -1,0 +1,69 @@
+---
+title: "W3 exercise: ChIPseq processing"
+output: html_document
+---
+
+# Loading relevant libraries
+
+```{r}
+suppressPackageStartupMessages({
+  library(rtracklayer) # read/write genomic file formats
+  library(GenomicRanges)
+  library(AnnotationHub)
+  library(epiwraps)
+})
+```
+
+# Downloading relevant fasta files
+
+```{r, eval = TRUE, echo = TRUE}
+dir.create("data")
+ah <- AnnotationHub()
+dm <- ah[["AH49674"]]
+export(import.2bit(dm), "data/BDGP6_genome.fasta.gz", compress = TRUE)
+```
+
+# Perform the main ChipSeq workflow
+
+Here we perform trimming, alignment, peak-calling and generate tracks
+
+```{bash engine.opts = '-l'}
+./ChIP_singleEnd_drosophila.sh
+```
+
+# Parse count and percentage of aligned reads from output of bash script
+
+```{r, eval = TRUE, echo = TRUE}
+bt2_log <- readLines("data/aligned/ENCFF127RRR.bowtie2")
+percent_mapped <- bt2_log[grep("overall alignment rate", bt2_log)]
+mapped_count <- system("samtools view -c -F 4 data/aligned/ENCFF127RRR.bam", intern = TRUE)
+
+print(percent_mapped)
+print(paste("Aligned", mapped_count, "reads"))
+```
+
+# Load peaks into R
+
+```{r, eval = TRUE, echo = TRUE}
+peaks <- rtracklayer::import("data/peaks/ENCFF127RRR_peaks.narrowPeak", format = "narrowPeak")
+total_peaks <- length(peaks)
+print(paste("Number of peaks found:", total_peaks))
+```
+
+# Select a peak within a gene and plot it
+
+```{r, eval = TRUE, echo = TRUE}
+dm <- query(ah, c("Drosophila melanogaster", "EnsDb"))
+dm <- ah[[rev(dm$ah_id)[1]]]
+dm_genes <- genes(dm)
+
+hits <- suppressWarnings(findOverlaps(peaks, dm_genes))
+peak <- queryHits(hits)[1]
+
+plotSignalTracks(
+  list(CTFC = "data/aligned/ENCFF127RRR.bam", Peaks = peaks),
+  region = peaks[peak],
+  extend = 5000,
+  tracks.tracks.params = list(ylim = c(0, 100))
+)
+```

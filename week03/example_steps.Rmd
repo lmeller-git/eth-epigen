@@ -38,12 +38,12 @@ download.file("https://www.ethz-ins.org/content/input.fastq.gz", "raw/input.fast
 
 # Reads QC and trimming
 
-## Using fastqc 
+## Using fastqc
 
 For this we will use shell commands:
 
 ```{bash engine.opts='-l', eval=FALSE}
-# note that depending on how your computer/server is set up, you might need to 
+# note that depending on how your computer/server is set up, you might need to
 # specify where to find the software, e.g.:
 # export PATH="/opt/miniconda3/bin:$PATH"
 mkdir -p raw_fastqc
@@ -79,7 +79,7 @@ qc <- lapply(c(ttk="raw/ttk.fastq.gz", input="raw/input.fastq.gz"), FUN=function
 ```
 
 This will create an html report with before/after QC plots, as well as a trimmed
-and filtered fastq file. Furthermore, the R output object (equivalent to the .json 
+and filtered fastq file. Furthermore, the R output object (equivalent to the .json
 stats also saved by the program) can be used to generate the QC plots inside a
 markdown, for example:
 
@@ -143,7 +143,7 @@ Rsubread::buildindex("BDGP6_genome/rsubread", reference="BDGP6_genome/genome.fas
 ```{r}
 dir.create("aligned")
 align.stats <- Rsubread::align(index="BDGP6_genome/rsubread", type="dna",
-                               readfile1=c("rfastp.trimmed/ttk_R1.fastq.gz", 
+                               readfile1=c("rfastp.trimmed/ttk_R1.fastq.gz",
                                            "rfastp.trimmed/input_R1.fastq.gz"),
                                output_file=c("aligned/ttk.bam","aligned/input.bam"),
                                nthreads=6, sortReadsByCoordinates=TRUE)
