@@ -47,12 +47,12 @@ Using this data, we can now calculate the proportion of overlapping peaks with t
 proportion_overlaps <- function(tss, peaks1, peaks2) {
   overlaps1 <- suppressWarnings(overlapsAny(tss, peaks1))
   overlaps2 <- suppressWarnings(overlapsAny(tss, peaks2))
-  overlaps_any <- overlaps1 & overlaps2
+  overlaps_both <- overlaps1 & overlaps2
 
   c(
     overlaps_first = mean(overlaps1),
     overlaps_second = mean(overlaps2),
-    overlaps_any = mean(overlaps_any)
+    overlaps_both = mean(overlaps_both)
   )
 }
 ```
@@ -68,12 +68,15 @@ mesc <- data.frame(
   proportion = proportion_overlaps(tss, peaks$H3K27ac_mESC, peaks$H3K27me3_mESC)
 )
 
-rbind(mESC = mesc, hear = heart)
+rbind(mESC = mesc, heart = heart)
 ```
+
+In both tissues the tss overlapping proportion of peaks is larger for H3K27ac and smaller for H3K27me3.
+Interestingly the overlapping proportion is over 2x larger in the heart tissue than in mESC.
 
 ## Question 2: What is the relationship between the 3 signals (p300, H3K27ac, and H3K27me3), and is it the same in both tissues?
 
-Here we can use an UpSet plot to show the relationship.
+Here we can use an UpSet plot and region overlaps to show the relationship.
 
 ```{r, eval = TRUE, echo = TRUE}
 overlaps_and_upset <- function(peaks, print_mat = TRUE) {
@@ -85,13 +88,23 @@ overlaps_and_upset <- function(peaks, print_mat = TRUE) {
 }
 ```
 
+for mESC:
+
 ```{r, eval = TRUE, echo = TRUE}
 peaks_mESC <- peaks[grepl("mESC", names(peaks))]
-peaks_heart <- peaks[grepl("Heart", names(peaks))]
-
 overlaps_and_upset(peaks_mESC)
+```
+
+and for Heart:
+
+```{r, eval = TRUE, echo = TRUE}
+peaks_heart <- peaks[grepl("Heart", names(peaks))]
 overlaps_and_upset(peaks_heart)
 ```
+
+In both tissues, H3K27ac and p300 have many overlaps.
+In heart tissue H3K27ac and H3K27me3 similarily have many overlaps.
+
 
 # Question 3: What is the relationship between regulatory elements active in mESC and in the differentiated tissue?
 
@@ -102,3 +115,6 @@ overlaps_and_upset(peaks[grepl("H3K27me3", names(peaks))], FALSE)
 
 overlaps_and_upset(peaks[grepl("p300", names(peaks))], FALSE)
 ```
+
+Across all three targets, the unique peaks per tissue outnumber the interectin ones.
+This effect is largest in p300 and H3K27me3.
