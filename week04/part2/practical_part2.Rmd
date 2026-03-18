@@ -79,7 +79,7 @@ sm <- signal2Matrix(bwfiles, regions=peaks$p300, w=50)
 # we could plot them all on separate scales:
 plotEnrichedHeatmaps(sm)
 # when doing that it can also help to use different colors, e.g.:
-plotEnrichedHeatmaps(sm, trim = 0.95, multiScale = TRUE, axis_name = "0", 
+plotEnrichedHeatmaps(sm, trim = 0.95, multiScale = TRUE, axis_name = "0",
                      colors=list("darkred","yellow","black","darkgreen","darkblue",
                                  viridisLite::inferno(100)))
 ```

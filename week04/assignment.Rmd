@@ -1,0 +1,104 @@
+---
+title: "exercise 4"
+author: "Louis Meller"
+output: html_document
+---
+
+```{r, eval = TRUE, echo = TRUE}
+suppressPackageStartupMessages({
+  library(AnnotationHub)
+  library(epiwraps)
+  library(rtracklayer)
+  library(ggplot2)
+  library(GenomicRanges)
+  library(ensembldb)
+})
+```
+
+```{bash, engine.opts = '-l'}
+./prep.sh
+```
+
+```{r, eval = TRUE, echo = TRUE}
+files <- list.files(path = "data", full.names = TRUE, pattern = "\\.bed")
+names(files) <- gsub("\\.bed", "", basename(files))
+peaks <- lapply(files, FUN = rtracklayer::import, format = "narrowPeak")
+```
+
+## Question 1: What is the proportion of TSS that overlap H3K27ac, H3K27me3, and the combination of both, in each tissue?
+
+First we download genetic data to obtain tss info.
+
+```{r, eval = TRUE, echo = TRUE}
+ah <- AnnotationHub()
+q <- query(ah, c("Mus Musculus", "EnsDb", "GRCm38"))
+mouse_db <- ah[[rev(q$ah_id)[1]]]
+seqlevelsStyle(mouse_db) <- "UCSC"
+```
+
+```{r, eval = TRUE, echo = TRUE}
+transcripts <- transcripts(mouse_db)
+tss <- promoters(transcripts)
+```
+
+Using this data, we can now calculate the proportion of overlapping peaks with tss regions.
+
+```{r, eval = TRUE, echo = TRUE}
+proportion_overlaps <- function(tss, peaks1, peaks2) {
+  overlaps1 <- suppressWarnings(overlapsAny(tss, peaks1))
+  overlaps2 <- suppressWarnings(overlapsAny(tss, peaks2))
+  overlaps_any <- overlaps1 & overlaps2
+
+  c(
+    overlaps_first = mean(overlaps1),
+    overlaps_second = mean(overlaps2),
+    overlaps_any = mean(overlaps_any)
+  )
+}
+```
+
+```{r, eval = TRUE, echo = TRUE}
+heart <- data.frame(
+  mark = c("H3K27ac", "H3K27me3", "Both"),
+  proportion = proportion_overlaps(tss, peaks$H3K27ac_Heart, peaks$H3K27me3_Heart)
+)
+
+mesc <- data.frame(
+  mark = c("H3K27ac", "H3K27me3", "Both"),
+  proportion = proportion_overlaps(tss, peaks$H3K27ac_mESC, peaks$H3K27me3_mESC)
+)
+
+rbind(mESC = mesc, hear = heart)
+```
+
+## Question 2: What is the relationship between the 3 signals (p300, H3K27ac, and H3K27me3), and is it the same in both tissues?
+
+Here we can use an UpSet plot to show the relationship.
+
+```{r, eval = TRUE, echo = TRUE}
+overlaps_and_upset <- function(peaks, print_mat = TRUE) {
+  if (print_mat) {
+    print(suppressWarnings(regionOverlaps(peaks)))
+  }
+
+  suppressWarnings(UpSet(make_comb_mat(regionsToUpset(peaks, nsets = length(peaks)))))
+}
+```
+
+```{r, eval = TRUE, echo = TRUE}
+peaks_mESC <- peaks[grepl("mESC", names(peaks))]
+peaks_heart <- peaks[grepl("Heart", names(peaks))]
+
+overlaps_and_upset(peaks_mESC)
+overlaps_and_upset(peaks_heart)
+```
+
+# Question 3: What is the relationship between regulatory elements active in mESC and in the differentiated tissue?
+
+```{r, eval = TRUE, echo = TRUE}
+overlaps_and_upset(peaks[grepl("H3K27ac", names(peaks))], FALSE)
+
+overlaps_and_upset(peaks[grepl("H3K27me3", names(peaks))], FALSE)
+
+overlaps_and_upset(peaks[grepl("p300", names(peaks))], FALSE)
+```
