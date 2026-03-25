@@ -1,0 +1,90 @@
+---
+title: "Week 5 - assignment"
+output: html_document
+---
+
+```{r}
+suppressPackageStartupMessages({
+  library(GenomicRanges)
+  library(SummarizedExperiment)
+  library(edgeR) # differential gene expression using neg.bin stats
+  library(epiwraps)
+  library(ggplot2)
+  library(sechm) # for plotting (features*samples) heatmaps
+})
+```
+
+## Preparing the data
+
+```{r, eval = TRUE, echo = TRUE}
+dir.create("data")
+options(timeout = 3600)
+download.file("https://ethz-ins.org/content/mouse_mm38_hippocampus.peakCounts.SE.rds",
+  "data/hippocampus_peaks.rds",
+  mode = "wb"
+)
+
+rds <- readRDS("data/hippocampus_peaks.rds")
+```
+
+```{r, eval = TRUE, echo = TRUE}
+sample_names <- colnames(rds)
+rds$condition <- ifelse(grepl("FSS", sample_names), "FSS", "control")
+rds$sex <- ifelse(grepl("female", sample_names), "female", "male")
+
+rds$condition <- factor(rds$condition, levels = c("control", "FSS"))
+rds$sex <- factor(rds$sex, levels = c("male", "female"))
+
+rownames(rds) <- paste0("peak_", seq_len(nrow(rds)))
+head(colData(rds))
+```
+
+
+## Exercise 1 - comparing stressed (denoted ‘FSS’ – forced swim stress) and control animals
+
+Differential analysis and top 10 mos significant regions:
+
+
+```{r, eval = TRUE, echo = TRUE}
+stress <- edgeR::DGEList(assay(rds), group = rds$condition)
+stress <- edgeR::calcNormFactors(stress)
+stress <- edgeR::estimateDisp(stress)
+stress_df <- as.data.frame(topTags(exactTest(stress), Inf))
+top10_stress <- head(row.names(stress_df), 10)
+cat("Top 10 most significant peaks for stress (control vs FSS):")
+print(top10_stress)
+```
+
+Heatmap of normalized counts:
+
+
+```{r, eval = TRUE, echo = TRUE}
+assay(rds, "logcpm_stress", withDimnames = FALSE) <- log1p(cpm(stress))
+sechm(rds, top10_stress, assayName = "logcpm_stress", gaps_at = "condition")
+```
+
+
+## Exercise 2 - comparing male and female animals
+
+Differential analysis and top 10 mos significant regions:
+
+
+```{r, eval = TRUE, echo = TRUE}
+sex <- edgeR::DGEList(assay(rds), group = rds$sex)
+sex <- edgeR::calcNormFactors(sex)
+sex <- edgeR::estimateDisp(sex)
+
+sex_df <- as.data.frame(topTags(exactTest(sex), Inf))
+
+top10_sex <- head(row.names(sex_df), 10)
+cat("Top 10 most significant regions (male vs female):")
+print(top10_sex)
+```
+
+Heatmap of normalized counts:
+
+
+```{r, eval = TRUE, echo = TRUE}
+assay(rds, "logcpm_sex", withDimnames = FALSE) <- log1p(cpm(sex))
+sechm(rds, features = top10_sex, assayName = "logcpm_sex", gaps_at = "sex")
+```
