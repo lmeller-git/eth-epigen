@@ -1,0 +1,85 @@
+---
+title: "DNA methylation and enrichment analysis"
+author: "Louis Meller"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup}
+suppressPackageStartupMessages({
+  library(epiwraps)
+  library(ggplot2)
+  library(AnnotationHub)
+  library(ensembldb)
+  library(edgeR)
+  library(rtracklayer)
+  library(BiocParallel)
+  library(bsseq) # Class and tools to analyze bisulfite sequencing data at CpG-level
+  library(DMRcate) # Identification of differentially-methylated regions
+})
+```
+
+## Load the data
+
+```{r, eval = TRUE, echo = TRUE}
+download.file("https://ethz-ins.org/content/w11_practical.zip", "w11_practical.zip")
+unzip("w11_practical.zip")
+```
+
+## Assignment 1:  Plot a heatmap of the methylation levels of the genes in top 5 DMR regions (from the practical) located on chr1. You may either do this as we did for promoters during the practical (i.e. using `getMeth()`), or using `signal2Matrix()` and `plotEnrichedHeatmaps()`.
+
+```{r, eval = TRUE, echo = TRUE}
+dmrs <- readRDS("dmr.rds")
+bs <- readRDS("ESC_astrocytes_BSseq.rds")
+
+bs <- bs[rowSums(assay(bs, "Cov") > 0) == ncol(bs), ]
+bs <- BSmooth(bs, BPPARAM = BiocParallel::MulticoreParam(4))
+
+dmrs_chr1 <- dmrs[seqnames(dmrs) == "chr1"]
+top5_dmrs_chr1 <- head(dmrs_chr1[order(abs(dmrs_chr1$meandiff), decreasing = TRUE)], 5)
+
+names(top5_dmrs_chr1) <- paste0("DMR_", 1:5, " (", seqnames(top5_dmrs_chr1), ":", start(top5_dmrs_chr1), ")")
+
+meth_top5 <- bsseq::getMeth(bs, regions = top5_dmrs_chr1, what = "perRegion")
+rownames(meth_top5) <- names(top5_dmrs_chr1)
+
+pheatmap(meth_top5,
+  main = "Average Methylation of Top 5 chr1 DMRs",
+  name = "methylation"
+)
+```
+
+Here we visualized the raw methylation levels across the samples for the five most significant dmrs on chr1.
+We can see that ESC and astrocyte replicates cluster within groups. This shows that methylation profiles are very distinct across these cell types.
+Further, methylation decreases from ESC to astrocyte, which is expected during differentiation.
+
+
+## Assignment 2: Use the differentially-methylated regions from the practical, and compare those changes to changes in accessibility. Given these two datasets, figure out a way (visualization/analysis) of assessing the extent of agreement (or disagreement) between changes in these two modalities.
+
+```{r, eval = TRUE, echo = TRUE}
+download.file("https://www.ethz-ins.org/content/ATAC_AstroVsESC_subset.rds", "ATAC_AstroVsESC_subset.rds")
+atac <- readRDS("ATAC_AstroVsESC_subset.rds")
+
+overlaps <- findOverlaps(dmrs, atac)
+
+comparison_df <- data.frame(
+  meth_diff = dmrs$meandiff[queryHits(overlaps)],
+  atac_logFC = atac$logFC[subjectHits(overlaps)]
+)
+
+ggplot(comparison_df, aes(x = meth_diff, y = atac_logFC)) +
+  geom_point(alpha = 0.4, color = "darkblue") +
+  geom_smooth(method = "lm", color = "red", linetype = "dashed") +
+  theme_minimal() +
+  labs(
+    title = "DNA methylation vs. chromatin accessibility (Astrocytes vs ESC)",
+    x = "DNA methylation difference (Astrocytes vs ESC)",
+    y = "atac-seq logFC (Astrocytes vs ESC)"
+  ) +
+  geom_hline(yintercept = 0, color = "grey") +
+  geom_vline(xintercept = 0, color = "grey")
+```
+
+Here we plotted atac-seq log fc against DNA methylation mean diff for regions where dmrs and atac peaks were measured in both ESC and astrocyte cells.
+The negative correlation shows that regions gaining DNA methylation lose chromatin accesibility, which is expected.
