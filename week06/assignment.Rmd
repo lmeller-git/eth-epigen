@@ -1,0 +1,84 @@
+```{r, eval = TRUE, echo = TRUE}
+suppressPackageStartupMessages({
+  library(AnnotationHub)
+  library(GenomicRanges)
+  library(motifmatchr)
+  library(Biostrings)
+  library(MotifDb)
+  library(universalmotif)
+  library(rtracklayer)
+})
+```
+
+
+```{r, eval = TRUE, echo = TRUE}
+ah <- AnnotationHub()
+genome <- ah[["AH68356"]]
+genome_seqs <- import(genome)
+Biostrings::writeXStringSet(genome_seqs, "genome.fa")
+fa_file <- Rsamtools::FaFile("genome.fa")
+```
+
+```{r, eval = TRUE, echo = TRUE}
+url <- "https://www.encodeproject.org/files/ENCFF.../@@download/ENCFF....bed.gz"
+download.file(url, "REST_peaks.bed.gz")
+
+peaks <- rtracklayer::import("REST_peaks.bed.gz", format="NarrowPeak")
+seqlevelsStyle(peaks) <- "Ensembl"
+peaks_chr1 <- peaks[seqnames(peaks) == "1"]
+```
+
+
+```{r, eval = TRUE, echo = TRUE}
+motifs <- query(MotifDb, c("Mmusculus", "CTCF"))
+
+names(motifs)
+
+motif <- motifs[["Mmusculus-HOCOMOCOv10-CTCF_MOUSE.H10MO.A"]]
+motif
+view_motifs(motifs[1:2])
+
+motif2 <- convert_motifs(motif, class="TFBSTools-PWMatrix")
+```
+
+
+```{r, eval = TRUE, echo = TRUE}
+# Scan for the motif within our peaks
+motif_in_peaks <- motifmatchr::matchMotifs(motif2,
+                                           subject = peaks_chr1,
+                                           genome = fa_file,
+                                           out = "positions")[[1]]
+
+# Calculate overlap
+peaks_with_motif <- sum(overlapsAny(peaks_chr1, motif_in_peaks))
+total_peaks <- length(peaks_chr1)
+pct_peaks <- round((peaks_with_motif / total_peaks) * 100, 1)
+
+# Print Answer 1
+cat(sprintf("Of the %d peaks, %d (%.1f%%) contain a motif\n",
+            total_peaks, peaks_with_motif, pct_peaks))
+```
+
+
+```{r, eval = TRUE, echo = TRUE}
+# Extract just the sequence for Chromosome 1
+chr1_seq <- genome_seqs["1"]
+
+# Scan the entire chromosome sequence for the motif
+motif_in_genome <- motifmatchr::matchMotifs(motif2,
+                                            subject = chr1_seq,
+                                            out = "positions")[[1]]
+
+# Reformat the output to proper GRanges coordinates
+names(motif_in_genome) <- "1"
+motif_in_genome <- as(motif_in_genome, "GRanges")
+
+# Calculate overlap
+motifs_in_peaks <- sum(overlapsAny(motif_in_genome, peaks_chr1))
+total_motifs <- length(motif_in_genome)
+pct_motifs <- round((motifs_in_peaks / total_motifs) * 100, 1)
+
+# Print Answer 2
+cat(sprintf("Of the %d motif instances, %d (%.1f%%) overlap a peak\n",
+            total_motifs, motifs_in_peaks, pct_motifs))
+```
