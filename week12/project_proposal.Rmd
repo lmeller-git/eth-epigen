@@ -1,0 +1,45 @@
+---
+title: "Project Proposal"
+output: html_document
+date: "2026-05-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Group Members
+Xiaohan Xie, Daven Lim, Louis Meller
+
+### 1. What is the topic?
+Topic: Re-analysis: “SARS-CoV-2 restructures host chromatin architecture" Wang, R., Lee, JH., Kim, J. et al. SARS-CoV-2 restructures host chromatin architecture. Nat Microbiol 8, 679–694 (2023). https://doi.org/10.1038/s41564-023-01344-8
+
+Characterize the 3D genome and epigenome of human cells after SARS-CoV-2 infection, finding widespread host chromatin restructuring to show that SARS-CoV-2 affects host chromatin.
+
+### 2. What data will you be using?
+Processed data: Yes  
+Data availability: Yes  
+Code availability: No  
+
+#### Data
+- https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE179184  
+- Raw sequencing data  
+- Aligned bigWig files for ChIP-seq samples  
+- Processed ValidPair files (converted to mcool for visualisation) for Hi-C samples  
+- BED files for peaks   
+
+#### Gene sets 
+- Obtained from https://www.gsea-msigdb.org/gsea/msigdb  
+- Database: https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/HALLMARK_INTERFERON_ALPHA_RESPONSE.html  
+- Manual curation: https://www.cell.com/cell/fulltext/S0092-8674(20)30489-X?dgcid=raven_jbs_aip_email&fbclid=IwAR2VSJptVH4VOX-rn36gzK1g83f6KNLqi7FQSwYIBCP5P21Dz-IQPjNA2no  
+- Supplementary Table 3  
+
+### 3. What are the analyses you wish to reproduce, or the questions you wish to answer?
+- Exploratory analysis using RNA-seq data  
+- A/B compartment analyses  
+- TADs and insulation scores  
+- Chromatin loop calling and enhancer-promoter contacts  
+- ABC score, GSEA (if time allows)  
+- Additional interesting analyses? (if time allows/something interesting comes up)  
+
+
